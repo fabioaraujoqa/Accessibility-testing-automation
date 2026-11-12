@@ -1,0 +1,25 @@
+{
+  "name": "poc-acessibilidade",
+  "version": "1.0.0",
+  "description": "Automação de acessibilidade web (Playwright + axe-core, WCAG 2.2 AA) com gate de CI",
+  "scripts": {
+    "a11y": "playwright test",
+    "a11y:pages": "playwright test --project=a11y --project=a11y-mobile-reflow tests/pages.a11y.spec.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.0",
+    "@types/node": "22.20.5",
+    "axe-core": "4.14.0",
+    "dotenv": "18.0.10",
+    "typescript": "7.0.2"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

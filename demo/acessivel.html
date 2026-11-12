@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo acessível · Cadastro</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; background: #fff; }
+    .skip-link { position: absolute; left: -999px; top: 0; background: #003a8c; color: #fff; padding: .5rem 1rem; }
+    .skip-link:focus { left: 0; }
+    header, main, footer { padding: 1rem; max-width: 40rem; margin: 0 auto; }
+    header { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    nav ul { list-style: none; display: flex; gap: 1rem; padding: 0; margin: 0; flex-wrap: wrap; }
+    a { color: #003a8c; }
+    label { display: block; font-weight: 600; margin-top: 1rem; }
+    input { width: 100%; padding: .5rem; border: 1px solid #555; border-radius: 4px; font: inherit; }
+    .hint { color: #4a4a4a; font-size: .9rem; margin: .25rem 0 0; }
+    button { margin-top: 1.25rem; padding: .6rem 1.2rem; background: #003a8c; color: #fff; border: 0; border-radius: 4px; font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid #b35900; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header>
+    <img src="logo.svg" alt="Banco Demo" width="40" height="40">
+    <nav aria-label="Principal">
+      <ul>
+        <li><a href="#conteudo">Início</a></li>
+        <li><a href="#ajuda">Ajuda</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="conteudo">
+    <h1>Abra sua conta</h1>
+    <p>Preencha seus dados para começar.</p>
+
+    <form action="#" novalidate>
+      <label for="nome">Nome completo</label>
+      <input id="nome" name="nome" type="text" autocomplete="name" required>
+
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-dica" required>
+      <p id="email-dica" class="hint">Usaremos para enviar o comprovante.</p>
+
+      <button type="submit">Continuar</button>
+    </form>
+
+    <h2 id="ajuda">Precisa de ajuda?</h2>
+    <p>Fale com a central pelo telefone <a href="tel:+551140040000">4004-0000</a>.</p>
+  </main>
+
+  <footer>
+    <p>© Banco Demo — página de exemplo sem violações conhecidas.</p>
+  </footer>
+</body>
+</html>

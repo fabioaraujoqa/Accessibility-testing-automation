@@ -1,0 +1,15 @@
+node_modules/
+
+# Segredos e sessão autenticada
+.env
+.env.*
+!.env.example
+.auth/
+
+# Saídas de execução
+playwright-report/
+test-results/
+reports/
+blob-report/
+
+.DS_Store

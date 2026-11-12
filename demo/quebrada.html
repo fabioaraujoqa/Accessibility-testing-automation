@@ -1,0 +1,52 @@
+<!doctype html>
+<!--
+  Página com violações CONHECIDAS e INTENCIONAIS. Usada para validar que o scanner e o gate as detectam.
+  Não corrija sem atualizar os testes que dependem dela.
+
+  Violações esperadas (axe, régua WCAG 2.2 AA):
+    1. html-has-lang  (serious)  – <html> sem atributo lang            → WCAG 3.1.1
+    2. image-alt      (critical) – <img> sem alt                        → WCAG 1.1.1
+    3. label          (critical) – <input> sem rótulo                   → WCAG 4.1.2 / 1.3.1
+    4. color-contrast (serious)  – texto #aaa sobre #fff (2.32:1)       → WCAG 1.4.3
+    5. button-name    (critical) – botão só com ícone, sem nome         → WCAG 4.1.2
+  Extra (projeto a11y-mobile-reflow, checagem própria):
+    6. custom-reflow-horizontal-scroll – bloco de largura fixa 600px    → WCAG 1.4.10
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo quebrada · Cadastro</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; color: #1a1a1a; background: #fff; }
+    main { padding: 1rem; }
+    .baixo-contraste { color: #aaa; }
+    .largura-fixa { width: 600px; background: #f2f2f2; padding: .5rem; }
+    .icone { width: 2.5rem; height: 2.5rem; border: 1px solid #555; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Abra sua conta</h1>
+
+    <!-- 2. imagem sem alt -->
+    <img src="logo.svg" width="40" height="40">
+
+    <!-- 4. contraste baixo -->
+    <p class="baixo-contraste">Preencha seus dados para começar.</p>
+
+    <form action="#">
+      <!-- 3. input sem label: o texto é só visual, não está associado ao campo
+           (sem placeholder de propósito: o axe aceita placeholder como nome acessível) -->
+      <span>Nome completo</span>
+      <input type="text" name="nome">
+
+      <!-- 5. botão sem nome acessível -->
+      <button type="submit" class="icone"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h10M8 4l4 4-4 4" stroke="#000" fill="none"/></svg></button>
+    </form>
+
+    <!-- 6. quebra de reflow em 320px -->
+    <div class="largura-fixa">Bloco de largura fixa que obriga rolagem horizontal em telas estreitas.</div>
+  </main>
+</body>
+</html>
