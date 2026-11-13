@@ -178,4 +178,19 @@ Para restringir os secrets à `main`, use um *Environment* com regra de proteç�
 > O plano original previa GitLab CI; este repositório usa GitHub Actions com as mesmas garantias
 > (imagem fixa, artefatos sempre publicados, resultado no PR, credenciais protegidas).
 
-<!-- Seção de MCP/agentes é completada na Fase 5. -->
+## Apoio com IA (MCP + agentes do Playwright)
+
+A IA ajuda a **explorar** jornadas, **gerar** testes e fazer **triagem**, mas fica fora do gate: nenhuma
+chamada a LLM ou MCP roda no CI.
+
+- [.mcp.json](.mcp.json): servidores `playwright` (`@playwright/mcp`, navegador para exploração) e
+  `playwright-test` (test runner do projeto, usado pelos agentes). Ao abrir o projeto, o Claude Code pede
+  para aprová-los (confira com `/mcp`).
+- [.claude/agents/](.claude/agents/): agentes `playwright-test-planner`, `-generator` e `-healer`
+  (gerados por `npx playwright init-agents --loop=claude`), partindo de [tests/seed.spec.ts](tests/seed.spec.ts).
+- [docs/prompts-ia.md](docs/prompts-ia.md): prompts prontos para exploração assistida, geração de spec de
+  jornada, triagem de violações e manutenção de teste quebrado.
+
+> **Revisão humana obrigatória:** todo teste gerado ou alterado por agente passa por code review antes do
+> merge. A IA nunca remove scans, nunca adiciona exclusões nem regras desligadas e nunca regrava o baseline.
+> Use o MCP só em ambiente e com usuário de teste.

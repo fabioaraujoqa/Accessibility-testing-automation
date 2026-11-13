@@ -39,7 +39,8 @@ export default defineConfig({
     },
     {
       name: 'a11y',
-      testMatch: /.*\.a11y\.spec\.ts/,
+      // seed.spec.ts: ponto de partida dos agentes do Playwright (só navega, sem asserções).
+      testMatch: [/.*\.a11y\.spec\.ts/, /seed\.spec\.ts/],
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'] },
     },
