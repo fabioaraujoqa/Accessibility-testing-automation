@@ -9,7 +9,7 @@
     "a11y:kbd": "playwright test --project=a11y-kbd",
     "typecheck": "tsc --noEmit",
     "a11y:baseline": "tsx scripts/update-baseline.ts",
-    "a11y:report": "tsx scripts/report.ts"
+    "a11y:report": "tsx scripts/report.ts && tsx scripts/wcag-docs.ts"
   },
   "keywords": [],
   "author": "",

@@ -115,6 +115,8 @@ Rode-o quando: (a) for adotar o gate num sistema pela primeira vez, (b) corrigir
 
 - `reports/summary.md`: tabela por página/estado com violações por impacto, novas em destaque, corrigidas
   e regras que o axe não conseguiu decidir (revisão manual).
+- `reports/REGRAS-WCAG.md`: quais critérios WCAG 2.2 A/AA têm verificação automática, quais regras do axe
+  rodam (geradas do axe-core instalado, então sempre atualizadas) e o que continua sendo manual.
 - `reports/metrics.json`: totais por impacto, por página/estado, por critério WCAG, % de contextos sem
   `critical`, data, commit, alvo e modo do gate. Pode alimentar um dashboard externo.
 
