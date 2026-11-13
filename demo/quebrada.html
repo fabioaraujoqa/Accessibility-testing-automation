@@ -11,6 +11,10 @@
     5. button-name    (critical) – botão só com ícone, sem nome         → WCAG 4.1.2
   Extra (projeto a11y-mobile-reflow, checagem própria):
     6. custom-reflow-horizontal-scroll – bloco de largura fixa 600px    → WCAG 1.4.10
+  Teclado (tests/keyboard, invisíveis ao axe):
+    7. armadilha de foco – campo CEP intercepta Tab/Shift+Tab           → WCAG 2.1.2
+    8. CTA inalcançável – "Continuar" é <div onclick> sem tabindex      → WCAG 2.1.1
+    9. foco invisível – *:focus { outline: none } sem substituto        → WCAG 2.4.7
 -->
 <html>
 <head>
@@ -22,6 +26,8 @@
     main { padding: 1rem; }
     .baixo-contraste { color: #aaa; }
     .largura-fixa { width: 600px; background: #f2f2f2; padding: .5rem; }
+    *:focus { outline: none; } /* 9. foco invisível */
+    .cta { display: inline-block; margin-top: 1rem; padding: .6rem 1.2rem; background: #003a8c; color: #fff; cursor: pointer; }
     .icone { width: 2.5rem; height: 2.5rem; border: 1px solid #555; background: #fff; }
   </style>
 </head>
@@ -41,12 +47,24 @@
       <span>Nome completo</span>
       <input type="text" name="nome">
 
+      <!-- 7. armadilha de foco: o campo "valida" e devolve o foco a si mesmo em qualquer Tab -->
+      <label for="cep">CEP</label>
+      <input id="cep" name="cep" type="text">
+
       <!-- 5. botão sem nome acessível -->
       <button type="submit" class="icone"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h10M8 4l4 4-4 4" stroke="#000" fill="none"/></svg></button>
     </form>
 
+    <!-- 8. CTA inalcançável por teclado -->
+    <div id="cta-continuar" class="cta" onclick="alert('enviado')">Continuar</div>
+
     <!-- 6. quebra de reflow em 320px -->
     <div class="largura-fixa">Bloco de largura fixa que obriga rolagem horizontal em telas estreitas.</div>
   </main>
+  <script>
+    document.getElementById('cep').addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') e.preventDefault();
+    });
+  </script>
 </body>
 </html>

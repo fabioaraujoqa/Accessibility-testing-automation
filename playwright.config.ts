@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { BASE_URL, DEMO_PORT, DEMO_URL } from './lib/env';
+import { BASE_URL, DEMO_PORT, DEMO_URL, IS_DEMO_TARGET } from './lib/env';
 
 export default defineConfig({
   testDir: './tests',
@@ -46,9 +46,17 @@ export default defineConfig({
         viewport: { width: 320, height: 640 },
       },
     },
+    {
+      // Navegação só por teclado: CTA alcançável, sem armadilha de foco, foco visível.
+      name: 'a11y-kbd',
+      testMatch: /.*\.kbd\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 
-  webServer: {
+  // Servidor local de demo/: só sobe quando o alvo é o demo (sem BASE_URL).
+  webServer: !IS_DEMO_TARGET ? undefined : {
     command: `node scripts/serve-demo.mjs`,
     url: `${DEMO_URL}/acessivel.html`,
     env: { DEMO_PORT: String(DEMO_PORT) },

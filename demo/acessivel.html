@@ -11,12 +11,20 @@
     .skip-link:focus { left: 0; }
     header, main, footer { padding: 1rem; max-width: 40rem; margin: 0 auto; }
     header { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
-    nav ul { list-style: none; display: flex; gap: 1rem; padding: 0; margin: 0; flex-wrap: wrap; }
+    nav ul { list-style: none; padding: 0; margin: .5rem 0 0; }
+    nav ul[hidden] { display: none; }
     a { color: #003a8c; }
     label { display: block; font-weight: 600; margin-top: 1rem; }
     input { width: 100%; padding: .5rem; border: 1px solid #555; border-radius: 4px; font: inherit; }
+    input[aria-invalid="true"] { border: 2px solid #b00020; }
     .hint { color: #4a4a4a; font-size: .9rem; margin: .25rem 0 0; }
-    button { margin-top: 1.25rem; padding: .6rem 1.2rem; background: #003a8c; color: #fff; border: 0; border-radius: 4px; font: inherit; cursor: pointer; }
+    .erro { color: #b00020; font-size: .9rem; margin: .25rem 0 0; }
+    .botao { margin-top: 1.25rem; padding: .6rem 1.2rem; background: #003a8c; color: #fff; border: 0; border-radius: 4px; font: inherit; cursor: pointer; }
+    .botao-secundario { background: #fff; color: #003a8c; border: 1px solid #003a8c; }
+    .resumo-erros { border: 2px solid #b00020; padding: .75rem 1rem; margin: 1rem 0; }
+    .sucesso { border: 2px solid #1b5e20; color: #1b5e20; padding: .75rem 1rem; margin: 1rem 0; }
+    dialog { max-width: min(30rem, 90vw); border: 1px solid #555; border-radius: 8px; }
+    dialog::backdrop { background: rgb(0 0 0 / .5); }
     :focus-visible { outline: 3px solid #b35900; outline-offset: 2px; }
   </style>
 </head>
@@ -25,9 +33,11 @@
   <header>
     <img src="logo.svg" alt="Banco Demo" width="40" height="40">
     <nav aria-label="Principal">
-      <ul>
+      <button type="button" id="botao-menu" class="botao botao-secundario" aria-expanded="false" aria-controls="menu-principal">Menu</button>
+      <ul id="menu-principal" hidden>
         <li><a href="#conteudo">Início</a></li>
         <li><a href="#ajuda">Ajuda</a></li>
+        <li><a href="login.html">Entrar</a></li>
       </ul>
     </nav>
   </header>
@@ -36,23 +46,94 @@
     <h1>Abra sua conta</h1>
     <p>Preencha seus dados para começar.</p>
 
-    <form action="#" novalidate>
+    <div id="resumo-erros" class="resumo-erros" role="alert" tabindex="-1" hidden>
+      <h2>Corrija os campos abaixo</h2>
+      <ul id="lista-erros"></ul>
+    </div>
+
+    <div id="sucesso" class="sucesso" role="status"></div>
+
+    <form id="form-cadastro" action="#" novalidate>
       <label for="nome">Nome completo</label>
-      <input id="nome" name="nome" type="text" autocomplete="name" required>
+      <input id="nome" name="nome" type="text" autocomplete="name" required aria-describedby="nome-erro">
+      <p id="nome-erro" class="erro" hidden></p>
 
       <label for="email">E-mail</label>
-      <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-dica" required>
+      <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-dica email-erro">
       <p id="email-dica" class="hint">Usaremos para enviar o comprovante.</p>
+      <p id="email-erro" class="erro" hidden></p>
 
-      <button type="submit">Continuar</button>
+      <button type="button" id="abrir-termos" class="botao botao-secundario">Ler os termos de uso</button>
+      <button type="submit" id="cta-continuar" class="botao">Continuar</button>
     </form>
 
     <h2 id="ajuda">Precisa de ajuda?</h2>
     <p>Fale com a central pelo telefone <a href="tel:+551140040000">4004-0000</a>.</p>
   </main>
 
+  <dialog id="modal-termos" aria-labelledby="modal-titulo">
+    <h2 id="modal-titulo">Termos de uso</h2>
+    <p>Ao continuar, você concorda com o tratamento dos seus dados conforme a LGPD.</p>
+    <button type="button" id="fechar-termos" class="botao">Fechar</button>
+  </dialog>
+
   <footer>
     <p>© Banco Demo — página de exemplo sem violações conhecidas.</p>
   </footer>
+
+  <script>
+    // Menu (disclosure)
+    const botaoMenu = document.getElementById('botao-menu');
+    const menu = document.getElementById('menu-principal');
+    botaoMenu.addEventListener('click', () => {
+      const aberto = botaoMenu.getAttribute('aria-expanded') === 'true';
+      botaoMenu.setAttribute('aria-expanded', String(!aberto));
+      menu.hidden = aberto;
+    });
+
+    // Modal (dialog nativo: prende o foco enquanto aberto, Esc fecha, foco volta ao gatilho)
+    const modal = document.getElementById('modal-termos');
+    const abrir = document.getElementById('abrir-termos');
+    abrir.addEventListener('click', () => modal.showModal());
+    document.getElementById('fechar-termos').addEventListener('click', () => modal.close());
+    modal.addEventListener('close', () => abrir.focus());
+
+    // Validação do formulário
+    const form = document.getElementById('form-cadastro');
+    const resumo = document.getElementById('resumo-erros');
+    const lista = document.getElementById('lista-erros');
+    const sucesso = document.getElementById('sucesso');
+    const regras = [
+      { id: 'nome', msg: 'Informe seu nome completo.', valido: (v) => v.trim().length > 2 },
+      { id: 'email', msg: 'Informe um e-mail válido, por exemplo nome@dominio.com.', valido: (v) => /^\S+@\S+\.\S+$/.test(v) },
+    ];
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      sucesso.textContent = '';
+      lista.innerHTML = '';
+      let erros = 0;
+      for (const r of regras) {
+        const campo = document.getElementById(r.id);
+        const erro = document.getElementById(`${r.id}-erro`);
+        const ok = r.valido(campo.value);
+        campo.setAttribute('aria-invalid', String(!ok));
+        erro.hidden = ok;
+        erro.textContent = ok ? '' : r.msg;
+        if (!ok) {
+          erros++;
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="#${r.id}">${r.msg}</a>`;
+          lista.append(li);
+        }
+      }
+      resumo.hidden = erros === 0;
+      if (erros) {
+        resumo.focus();
+      } else {
+        sucesso.textContent = 'Cadastro enviado com sucesso. Verifique seu e-mail.';
+      }
+    });
+  </script>
 </body>
 </html>

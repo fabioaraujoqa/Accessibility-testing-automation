@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo · Minha conta</title>
+  <script>
+    // Sem "sessão" → volta para o login (simula página protegida).
+    if (!localStorage.getItem('demo-sessao')) location.replace('login.html');
+  </script>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; background: #fff; }
+    main { padding: 1rem; max-width: 40rem; margin: 0 auto; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: .4rem; border-bottom: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="saudacao">Minha conta</h1>
+    <table>
+      <caption>Últimos lançamentos</caption>
+      <thead><tr><th scope="col">Data</th><th scope="col">Descrição</th><th scope="col">Valor</th></tr></thead>
+      <tbody>
+        <tr><td>10/11</td><td>Supermercado</td><td>R$ 152,30</td></tr>
+        <tr><td>08/11</td><td>Farmácia</td><td>R$ 48,90</td></tr>
+      </tbody>
+    </table>
+  </main>
+  <script>
+    document.getElementById('saudacao').textContent = `Olá, ${localStorage.getItem('demo-sessao')}`;
+  </script>
+</body>
+</html>

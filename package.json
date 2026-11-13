@@ -5,6 +5,8 @@
   "scripts": {
     "a11y": "playwright test",
     "a11y:pages": "playwright test --project=a11y --project=a11y-mobile-reflow tests/pages.a11y.spec.ts",
+    "a11y:journeys": "playwright test --project=a11y tests/journeys",
+    "a11y:kbd": "playwright test --project=a11y-kbd",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
