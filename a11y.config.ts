@@ -103,7 +103,7 @@ const demo: Target = {
       waitFor: 'main',
       keyboard: { cta: '#cta-continuar', afterEnter: '#resumo-erros' },
     },
-    { name: 'demo-quebrada', path: '/quebrada.html', requiresAuth: false },
+    { name: 'demo-quebrada', path: '/quebrada.html', requiresAuth: false, keyboard: { cta: '#cta-continuar' } },
     { name: 'demo-area-logada', path: '/area-logada.html', requiresAuth: true, waitFor: '#saudacao' },
   ],
   auth: {

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { IS_DEMO_TARGET } from '../../lib/env';
-import { formatWalk, walkKeyboard } from '../../lib/keyboard';
+import { formatWalk, keyboardViolations, walkKeyboard } from '../../lib/keyboard';
 
 /**
  * Regressão do próprio detector de teclado: em demo/quebrada.html ele PRECISA encontrar
@@ -24,5 +24,9 @@ test.describe('detector de teclado (demo-quebrada)', () => {
     expect.soft(forward.ctaReached, 'deveria detectar CTA inalcançável').toBe(false);
     expect.soft(forward.invisibleFocus.length, 'deveria detectar foco invisível').toBeGreaterThan(0);
     expect(forward.steps.at(-1)?.element, 'a armadilha deveria ser o campo CEP').toContain('input#cep');
+
+    // A conversão em violações (que alimenta baseline/gate) precisa refletir os três problemas.
+    const ruleIds = keyboardViolations('demo-quebrada#teclado', forward, backward, '#cta-continuar').map((v) => v.ruleId);
+    expect([...new Set(ruleIds)].sort()).toEqual(['custom-kbd-cta-unreachable', 'custom-kbd-focus-not-visible', 'custom-kbd-focus-trap']);
   });
 });

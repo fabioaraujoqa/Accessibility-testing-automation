@@ -1,8 +1,8 @@
-import { test, expect } from '../fixtures/a11y';
+import { test } from '../fixtures/a11y';
 import { a11yConfig } from '../a11y.config';
 import { STORAGE_STATE } from '../lib/env';
 import { checkReflow, scan } from '../lib/scan';
-import { applyGate, formatBlocking } from '../lib/gate';
+import { gate } from '../lib/gate';
 
 /**
  * Scan parametrizado: um teste por página do a11y.config.ts.
@@ -20,14 +20,9 @@ for (const pageConfig of a11yConfig.pages) {
       const context = isReflow ? `${pageConfig.name}@320px` : pageConfig.name;
 
       const { violations } = await scan({ page, testInfo, makeAxe, context, exclude: pageConfig.exclude });
-      if (isReflow) {
-        const reflow = await checkReflow(page, context);
-        for (const v of reflow) testInfo.annotations.push({ type: 'a11y', description: `${context}: ${v.ruleId}:${v.impact} — ${v.help}` });
-        violations.push(...reflow);
-      }
+      if (isReflow) violations.push(...(await checkReflow(page, context)));
 
-      const gate = applyGate(violations, a11yConfig.gateMode);
-      expect(gate.passed, formatBlocking(gate)).toBe(true);
+      await gate(testInfo, [context], violations);
     });
   });
 }

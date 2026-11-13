@@ -1,7 +1,6 @@
-import { test, expect, type Page, type TestInfo } from '@playwright/test';
-import { a11yConfig } from '../a11y.config';
+import { test, type Page, type TestInfo } from '@playwright/test';
 import type { MakeAxe, MakeAxeOptions } from '../fixtures/a11y';
-import { applyGate, formatBlocking } from './gate';
+import { gate } from './gate';
 import { scan, type NormalizedViolation, type ScanResult } from './scan';
 
 /**
@@ -14,7 +13,7 @@ import { scan, type NormalizedViolation, type ScanResult } from './scan';
  *   await journey.scan('inicial');
  *   await page.getByRole('button', { name: 'Menu' }).click();
  *   await journey.scan('menu-expandido');
- *   journey.expectGate();
+ *   await journey.expectGate();
  */
 export function createJourney(opts: { page: Page; testInfo: TestInfo; makeAxe: MakeAxe; name: string }) {
   const violations: NormalizedViolation[] = [];
@@ -34,10 +33,9 @@ export function createJourney(opts: { page: Page; testInfo: TestInfo; makeAxe: M
       });
     },
 
-    /** Aplica o gate sobre as violações de todos os estados escaneados. */
-    expectGate() {
-      const gate = applyGate(violations, a11yConfig.gateMode);
-      expect(gate.passed, formatBlocking(gate)).toBe(true);
+    /** Compara com o baseline e aplica o gate sobre as violações NOVAS de todos os estados escaneados. */
+    async expectGate() {
+      await gate(opts.testInfo, states.map((s) => `${opts.name}/${s}`), violations);
     },
   };
 }

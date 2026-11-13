@@ -55,6 +55,8 @@ export function normalizeViolations(context: string, results: Result[]): Normali
   );
 }
 
+export const INCOMPLETE_ANNOTATION = 'a11y-incomplete';
+
 /** Roda o axe, anexa o JSON completo ao relatório e devolve as violações normalizadas. */
 export async function scan({ page, testInfo, makeAxe, context, ...axeOptions }: ScanOptions): Promise<ScanResult> {
   const raw = await makeAxe(axeOptions).analyze();
@@ -65,10 +67,6 @@ export async function scan({ page, testInfo, makeAxe, context, ...axeOptions }: 
     body: JSON.stringify(raw, null, 2),
     contentType: 'application/json',
   });
-  await testInfo.attach(`violacoes-${slug}.json`, {
-    body: JSON.stringify(violations, null, 2),
-    contentType: 'application/json',
-  });
 
   testInfo.annotations.push({
     type: 'a11y',
@@ -76,6 +74,15 @@ export async function scan({ page, testInfo, makeAxe, context, ...axeOptions }: 
       raw.violations.length ? ` [${raw.violations.map((v) => `${v.id}:${v.impact}`).join(', ')}]` : ''
     }`,
   });
+
+  // "Incompletas": o axe não conseguiu decidir (ex.: contraste sobre imagem). Exigem revisão manual;
+  // não entram no gate, mas aparecem no summary.md.
+  if (raw.incomplete.length) {
+    testInfo.annotations.push({
+      type: INCOMPLETE_ANNOTATION,
+      description: JSON.stringify({ context, rules: raw.incomplete.map((r) => r.id) }),
+    });
+  }
 
   return { context, violations, raw };
 }

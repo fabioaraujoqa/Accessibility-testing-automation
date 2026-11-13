@@ -1,7 +1,9 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { a11yConfig } from '../../a11y.config';
 import { STORAGE_STATE } from '../../lib/env';
-import { formatWalk, tabTo, walkKeyboard } from '../../lib/keyboard';
+import { gate } from '../../lib/gate';
+import { formatWalk, keyboardViolations, tabTo, walkKeyboard } from '../../lib/keyboard';
+import type { NormalizedViolation } from '../../lib/scan';
 
 /**
  * Navegação só por teclado, parametrizada pelas páginas do a11y.config.ts que têm `keyboard`.
@@ -9,9 +11,11 @@ import { formatWalk, tabTo, walkKeyboard } from '../../lib/keyboard';
  *   - WCAG 2.1.2 Sem armadilha: Tab e Shift+Tab percorrem a página inteira e saem dela
  *   - WCAG 2.4.7 Foco visível: todo elemento focado tem indicador (outline/box-shadow)
  *   - Enter aciona o CTA (quando `afterEnter` está configurado)
+ * Os achados viram violações e passam pelo baseline + gateMode, como as do axe.
  */
 for (const pageConfig of a11yConfig.pages.filter((p) => p.keyboard)) {
   const kbd = pageConfig.keyboard!;
+  const context = `${pageConfig.name}#teclado`;
 
   test.describe(pageConfig.name, () => {
     if (pageConfig.requiresAuth) test.use({ storageState: STORAGE_STATE });
@@ -27,17 +31,33 @@ for (const pageConfig of a11yConfig.pages.filter((p) => p.keyboard)) {
         contentType: 'text/plain',
       });
 
-      expect.soft(forward.escaped, `Armadilha de foco (Tab): o foco não saiu da página.\n${formatWalk(forward)}`).toBe(true);
-      expect.soft(backward.escaped, `Armadilha de foco (Shift+Tab): o foco não saiu da página.\n${formatWalk(backward)}`).toBe(true);
-      expect.soft(forward.ctaReached, `CTA "${kbd.cta}" não é alcançável com Tab.\n${formatWalk(forward)}`).toBe(true);
-      expect.soft(forward.invisibleFocus, 'Elementos com foco sem indicador visível').toEqual([]);
+      const violations: NormalizedViolation[] = keyboardViolations(context, forward, backward, kbd.cta);
 
       if (kbd.afterEnter && forward.ctaReached) {
         await page.reload();
-        expect(await tabTo(page, kbd.cta)).toBe(true);
+        if (pageConfig.waitFor) await page.locator(pageConfig.waitFor).first().waitFor();
+        await tabTo(page, kbd.cta);
         await page.keyboard.press('Enter');
-        await expect.soft(page.locator(kbd.afterEnter), 'Enter no CTA não produziu o efeito esperado').toBeVisible();
+        const effect = await page
+          .locator(kbd.afterEnter)
+          .first()
+          .waitFor({ state: 'visible', timeout: 5_000 })
+          .then(() => true, () => false);
+        if (!effect) {
+          violations.push({
+            ruleId: 'custom-kbd-enter-no-effect',
+            impact: 'serious',
+            context,
+            target: kbd.cta,
+            help: `Enter no CTA (${kbd.cta}) não produziu o efeito esperado (${kbd.afterEnter})`,
+            helpUrl: 'https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html',
+            wcag: ['wcag2a', 'wcag211'],
+            html: '',
+          });
+        }
       }
+
+      await gate(testInfo, [context], violations);
     });
   });
 }

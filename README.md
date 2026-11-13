@@ -17,6 +17,7 @@ npm run a11y                # todos os testes
 npm run a11y:pages          # só o scan de páginas (desktop + 320px)
 npm run a11y:journeys       # só as jornadas
 npm run a11y:kbd            # só os testes de teclado
+npm run a11y:report         # gera reports/summary.md + reports/metrics.json (após os testes)
 npx playwright show-report  # relatório HTML (JSON do axe e ordem de foco anexados em cada teste)
 ```
 
@@ -64,7 +65,7 @@ O config recusa itens sem motivo.
 
 Jornadas cobrem **estados** que um scan de página não vê: menu aberto, modal, erro de validação, sucesso.
 Copie [tests/journeys/cadastro.a11y.spec.ts](tests/journeys/cadastro.a11y.spec.ts) (o modelo) e mantenha
-um `journey.scan('<estado>')` depois de cada interação relevante e um `journey.expectGate()` no final.
+um `journey.scan('<estado>')` depois de cada interação relevante e um `await journey.expectGate()` no final.
 Use `toMatchAriaSnapshot` em componentes críticos para travar papel, nome e ordem
 (gere com `npx playwright test <arquivo> --update-snapshots` e revise o diff).
 
@@ -77,4 +78,53 @@ Use `toMatchAriaSnapshot` em componentes críticos para travar papel, nome e ord
 | `a11y-mobile-reflow` | Scan em 320×640 + checagem própria de rolagem horizontal (WCAG 1.4.10, que o axe não cobre) |
 | `a11y-kbd` | Navegação só por teclado (WCAG 2.1.1, 2.1.2, 2.4.7), que o axe não cobre |
 
-<!-- Seções de baseline/gate, CI, MCP/agentes e glossário são completadas nas próximas fases. -->
+## Baseline e gate
+
+O gate reprova **apenas violações novas** em relação ao baseline versionado em
+[baseline/violations.json](baseline/violations.json). O que já existe vira dívida, acompanhada pelas métricas.
+
+| Modo (`A11Y_GATE_MODE`) | Reprova quando há violação **nova** de impacto |
+|---|---|
+| `report` | nunca (só relatório) |
+| `critical` | `critical` |
+| `serious` | `critical` ou `serious` |
+
+**Identidade de uma violação (fingerprint):** `regra | página/estado | seletor normalizado`. Índices voláteis
+(`:nth-child`) e classes geradas por CSS-in-JS são removidos ([lib/fingerprint.ts](lib/fingerprint.ts)).
+A comparação conta ocorrências: se o baseline aceita 1 e agora há 2, 1 é nova. Quando o axe troca o
+seletor de um elemento (o que acontece quando surge outro parecido), a ocorrência é casada pela
+regra + página/estado. Limitação: corrigir uma ocorrência e criar outra da mesma regra, na mesma página
+e no mesmo PR, se compensam. O total continua visível no `summary.md`.
+
+Problemas de teclado (armadilha de foco, CTA inalcançável, foco invisível, Enter sem efeito) e de
+reflow em 320 px viram violações `custom-*` e seguem as mesmas regras de baseline e gate.
+
+**Atualizar o baseline é uma ação explícita e manual:**
+
+```bash
+npm run a11y:baseline              # roda a suíte em modo report e regrava o baseline
+npm run a11y:baseline -- --no-run  # usa o último reports/results.json
+git diff baseline/                 # o diff vai para code review
+```
+
+Só os contextos (página/estado) escaneados na execução são substituídos; os demais são mantidos.
+Rode-o quando: (a) for adotar o gate num sistema pela primeira vez, (b) corrigir violações (para
+"travar" a melhoria), ou (c) aceitar conscientemente uma dívida nova, com justificativa no MR.
+
+**Relatórios** (`npm run a11y:report`, depois dos testes):
+
+- `reports/summary.md`: tabela por página/estado com violações por impacto, novas em destaque, corrigidas
+  e regras que o axe não conseguiu decidir (revisão manual).
+- `reports/metrics.json`: totais por impacto, por página/estado, por critério WCAG, % de contextos sem
+  `critical`, data, commit, alvo e modo do gate. Pode alimentar um dashboard externo.
+
+## Glossário de impactos do axe
+
+| Impacto | Significado |
+|---|---|
+| `critical` | Bloqueia o acesso: a pessoa não consegue concluir a tarefa (ex.: botão sem nome, imagem funcional sem alt). |
+| `serious` | Dificulta muito ou exige contorno (ex.: contraste insuficiente, idioma da página ausente). |
+| `moderate` | Causa incômodo ou confusão, mas há caminho (ex.: estrutura de landmarks incompleta). |
+| `minor` | Irritação leve; melhoria de qualidade. |
+
+<!-- Seções de CI (estratégia de ativação), MCP/agentes são completadas nas próximas fases. -->

@@ -76,6 +76,6 @@ test.describe('jornada: cadastro (demo)', () => {
     await journey.scan('sucesso');
 
     expect(journey.states.length).toBeGreaterThanOrEqual(3);
-    journey.expectGate();
+    await journey.expectGate();
   });
 });

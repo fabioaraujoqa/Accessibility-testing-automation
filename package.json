@@ -7,7 +7,9 @@
     "a11y:pages": "playwright test --project=a11y --project=a11y-mobile-reflow tests/pages.a11y.spec.ts",
     "a11y:journeys": "playwright test --project=a11y tests/journeys",
     "a11y:kbd": "playwright test --project=a11y-kbd",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "a11y:baseline": "tsx scripts/update-baseline.ts",
+    "a11y:report": "tsx scripts/report.ts"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +20,7 @@
     "@types/node": "22.20.5",
     "axe-core": "4.14.0",
     "dotenv": "18.0.10",
+    "tsx": "4.23.15",
     "typescript": "7.0.2"
   },
   "private": true,

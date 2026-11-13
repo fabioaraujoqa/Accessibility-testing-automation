@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import type { NormalizedViolation } from './scan';
 
 /** Um passo da navegação por teclado: qual elemento recebeu o foco e se o foco está visível. */
 export interface FocusStep {
@@ -46,8 +47,9 @@ async function describeFocus(page: Page, ctaSelector: string | undefined) {
     const style = getComputedStyle(el);
     const hasOutline = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
     const hasShadow = style.boxShadow !== 'none';
-    const id = el.id ? `#${el.id}` : '';
-    const label = (el.getAttribute('aria-label') ?? el.textContent ?? (el as HTMLInputElement).name ?? '')
+    const name = el.getAttribute('name');
+    const id = el.id ? `#${el.id}` : name ? `[name="${name}"]` : '';
+    const label = (el.getAttribute('aria-label') || el.textContent || '')
       .trim()
       .replace(/\s+/g, ' ')
       .slice(0, 40);
@@ -125,4 +127,62 @@ export function formatWalk(walk: KeyboardWalk): string {
   return walk.steps
     .map((s) => `${String(s.step).padStart(2)}. ${s.key.padEnd(9)} → ${s.element}${s.isCta ? '  ◀ CTA' : ''}${!s.leftDocument && !s.focusVisible ? '  ⚠ foco invisível' : ''}`)
     .join('\n');
+}
+
+/**
+ * Converte o percurso de teclado em violações no mesmo formato das do axe,
+ * para que passem pelo baseline e pelo gateMode como qualquer outra.
+ */
+export function keyboardViolations(
+  context: string,
+  forward: KeyboardWalk,
+  backward: KeyboardWalk,
+  ctaSelector: string,
+): NormalizedViolation[] {
+  const out: NormalizedViolation[] = [];
+  const base = { context, html: '' };
+  const trapAt = (w: KeyboardWalk) => w.steps.at(-1)?.element ?? 'desconhecido';
+
+  for (const w of [forward, backward]) {
+    if (!w.escaped) {
+      out.push({
+        ...base,
+        ruleId: 'custom-kbd-focus-trap',
+        impact: 'critical',
+        target: trapAt(w),
+        help: `Armadilha de foco: com ${w.key} o foco não sai da página (preso em ${trapAt(w)})`,
+        helpUrl: 'https://www.w3.org/WAI/WCAG22/Understanding/no-keyboard-trap.html',
+        wcag: ['wcag2a', 'wcag212'],
+        failureSummary: formatWalk(w),
+      });
+    }
+  }
+  // Mesma armadilha nos dois sentidos = uma ocorrência só.
+  if (out.length === 2 && out[0].target === out[1].target) out.pop();
+
+  if (!forward.ctaReached) {
+    out.push({
+      ...base,
+      ruleId: 'custom-kbd-cta-unreachable',
+      impact: 'critical',
+      target: ctaSelector,
+      help: `CTA principal (${ctaSelector}) não é alcançável com Tab`,
+      helpUrl: 'https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html',
+      wcag: ['wcag2a', 'wcag211'],
+      failureSummary: formatWalk(forward),
+    });
+  }
+
+  for (const element of forward.invisibleFocus) {
+    out.push({
+      ...base,
+      ruleId: 'custom-kbd-focus-not-visible',
+      impact: 'serious',
+      target: element,
+      help: `Elemento recebe foco sem indicador visível: ${element}`,
+      helpUrl: 'https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html',
+      wcag: ['wcag2aa', 'wcag247'],
+    });
+  }
+  return out;
 }

@@ -1,0 +1,142 @@
+{
+  "_comment": "Dívida de acessibilidade aceita. O gate só reprova violações FORA desta lista. Gerado por `npm run a11y:baseline`; nunca edite à mão sem revisão. Todo diff deste arquivo passa por code review.",
+  "updatedAt": "2026-11-13T02:26:34.379Z",
+  "commit": "0df70e3",
+  "entries": [
+    {
+      "fingerprint": "button-name|demo-quebrada|button",
+      "ruleId": "button-name",
+      "context": "demo-quebrada",
+      "target": "button",
+      "impact": "critical",
+      "help": "Buttons must have discernible text",
+      "count": 1
+    },
+    {
+      "fingerprint": "color-contrast|demo-quebrada|p",
+      "ruleId": "color-contrast",
+      "context": "demo-quebrada",
+      "target": "p",
+      "impact": "serious",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "count": 1
+    },
+    {
+      "fingerprint": "html-has-lang|demo-quebrada|html",
+      "ruleId": "html-has-lang",
+      "context": "demo-quebrada",
+      "target": "html",
+      "impact": "serious",
+      "help": "<html> element must have a lang attribute",
+      "count": 1
+    },
+    {
+      "fingerprint": "image-alt|demo-quebrada|img",
+      "ruleId": "image-alt",
+      "context": "demo-quebrada",
+      "target": "img",
+      "impact": "critical",
+      "help": "Images must have alternative text",
+      "count": 1
+    },
+    {
+      "fingerprint": "label|demo-quebrada|input[name=\"nome\"]",
+      "ruleId": "label",
+      "context": "demo-quebrada",
+      "target": "input[name=\"nome\"]",
+      "impact": "critical",
+      "help": "Form elements must have labels",
+      "count": 1
+    },
+    {
+      "fingerprint": "button-name|demo-quebrada@320px|button",
+      "ruleId": "button-name",
+      "context": "demo-quebrada@320px",
+      "target": "button",
+      "impact": "critical",
+      "help": "Buttons must have discernible text",
+      "count": 1
+    },
+    {
+      "fingerprint": "color-contrast|demo-quebrada@320px|p",
+      "ruleId": "color-contrast",
+      "context": "demo-quebrada@320px",
+      "target": "p",
+      "impact": "serious",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "count": 1
+    },
+    {
+      "fingerprint": "custom-reflow-horizontal-scroll|demo-quebrada@320px|html",
+      "ruleId": "custom-reflow-horizontal-scroll",
+      "context": "demo-quebrada@320px",
+      "target": "html",
+      "impact": "serious",
+      "help": "Conteúdo exige rolagem horizontal em 320px (largura do documento: 632px)",
+      "count": 1
+    },
+    {
+      "fingerprint": "html-has-lang|demo-quebrada@320px|html",
+      "ruleId": "html-has-lang",
+      "context": "demo-quebrada@320px",
+      "target": "html",
+      "impact": "serious",
+      "help": "<html> element must have a lang attribute",
+      "count": 1
+    },
+    {
+      "fingerprint": "image-alt|demo-quebrada@320px|img",
+      "ruleId": "image-alt",
+      "context": "demo-quebrada@320px",
+      "target": "img",
+      "impact": "critical",
+      "help": "Images must have alternative text",
+      "count": 1
+    },
+    {
+      "fingerprint": "label|demo-quebrada@320px|input[name=\"nome\"]",
+      "ruleId": "label",
+      "context": "demo-quebrada@320px",
+      "target": "input[name=\"nome\"]",
+      "impact": "critical",
+      "help": "Form elements must have labels",
+      "count": 1
+    },
+    {
+      "fingerprint": "custom-kbd-cta-unreachable|demo-quebrada#teclado|#cta-continuar",
+      "ruleId": "custom-kbd-cta-unreachable",
+      "context": "demo-quebrada#teclado",
+      "target": "#cta-continuar",
+      "impact": "critical",
+      "help": "CTA principal (#cta-continuar) não é alcançável com Tab",
+      "count": 1
+    },
+    {
+      "fingerprint": "custom-kbd-focus-not-visible|demo-quebrada#teclado|input[name=\"nome\"]",
+      "ruleId": "custom-kbd-focus-not-visible",
+      "context": "demo-quebrada#teclado",
+      "target": "input[name=\"nome\"]",
+      "impact": "serious",
+      "help": "Elemento recebe foco sem indicador visível: input[name=\"nome\"]",
+      "count": 1
+    },
+    {
+      "fingerprint": "custom-kbd-focus-not-visible|demo-quebrada#teclado|input#cep",
+      "ruleId": "custom-kbd-focus-not-visible",
+      "context": "demo-quebrada#teclado",
+      "target": "input#cep",
+      "impact": "serious",
+      "help": "Elemento recebe foco sem indicador visível: input#cep",
+      "count": 1
+    },
+    {
+      "fingerprint": "custom-kbd-focus-trap|demo-quebrada#teclado|input#cep",
+      "ruleId": "custom-kbd-focus-trap",
+      "context": "demo-quebrada#teclado",
+      "target": "input#cep",
+      "impact": "critical",
+      "help": "Armadilha de foco: com Tab o foco não sai da página (preso em input#cep)",
+      "count": 1
+    }
+  ]
+}
