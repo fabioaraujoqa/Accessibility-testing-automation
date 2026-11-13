@@ -62,7 +62,7 @@ jobs:
 
   # 2) Gate no sistema real. Só roda se a variable BASE_URL estiver configurada.
   a11y:
-    name: a11y (${{ vars.BASE_URL }})
+    name: a11y (sistema)
     needs: selftest
     if: ${{ vars.BASE_URL != '' }}
     runs-on: ubuntu-latest
