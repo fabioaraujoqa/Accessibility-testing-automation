@@ -12,6 +12,10 @@ import { IS_DEMO_TARGET } from './lib/env';
 
 export type GateMode = 'report' | 'critical' | 'serious';
 
+/**
+ * Atenção (doc oficial do Playwright): `exclude` desliga TODAS as regras no elemento E em todos os
+ * descendentes. Para um problema conhecido e pontual, prefira `disabledRules` ou um seletor bem específico.
+ */
 export interface Exclusion {
   /** Seletor CSS excluído do scan. */
   selector: string;

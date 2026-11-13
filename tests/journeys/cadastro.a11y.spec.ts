@@ -14,13 +14,15 @@ test.describe('jornada: cadastro (demo)', () => {
     const journey = createJourney({ page, testInfo, makeAxe, name: 'jornada-cadastro' });
 
     await page.goto('/acessivel.html');
+    // Estado inicial: página inteira. Nos demais, só o trecho que mudou (include), para não
+    // repetir a dívida da página em cada estado (recomendação da doc do Playwright).
     await journey.scan('inicial');
 
     // Estado 1: menu expandido
     const botaoMenu = page.getByRole('button', { name: 'Menu' });
     await botaoMenu.click();
     await expect(botaoMenu).toHaveAttribute('aria-expanded', 'true');
-    await journey.scan('menu-expandido');
+    await journey.scan('menu-expandido', { include: 'nav[aria-label="Principal"]' });
     // Trava papel, nome e ordem do menu (componente crítico de navegação).
     await expect(page.getByRole('navigation', { name: 'Principal' })).toMatchAriaSnapshot(`
       - navigation "Principal":
@@ -42,7 +44,7 @@ test.describe('jornada: cadastro (demo)', () => {
     await abrirTermos.click();
     const modal = page.getByRole('dialog', { name: 'Termos de uso' });
     await expect(modal).toBeVisible();
-    await journey.scan('modal-aberto');
+    await journey.scan('modal-aberto', { include: 'dialog[open]' });
     // Esc fecha o modal e o foco volta para quem o abriu.
     await page.keyboard.press('Escape');
     await expect(modal).toBeHidden();
@@ -54,7 +56,7 @@ test.describe('jornada: cadastro (demo)', () => {
     await expect(resumo).toBeVisible();
     await expect(resumo).toBeFocused();
     await expect(page.getByLabel('Nome completo')).toHaveAttribute('aria-invalid', 'true');
-    await journey.scan('erro-validacao');
+    await journey.scan('erro-validacao', { include: ['#resumo-erros', '#form-cadastro'] });
     // Trava a estrutura do resumo de erros (anunciado por leitor de tela via role=alert).
     await expect(resumo).toMatchAriaSnapshot(`
       - alert:
@@ -73,7 +75,7 @@ test.describe('jornada: cadastro (demo)', () => {
     await page.getByLabel('E-mail').fill('maria@exemplo.com');
     await page.getByRole('button', { name: 'Continuar' }).click();
     await expect(page.getByRole('status')).toHaveText(/sucesso/);
-    await journey.scan('sucesso');
+    await journey.scan('sucesso', { include: '#sucesso' });
 
     expect(journey.states.length).toBeGreaterThanOrEqual(3);
     await journey.expectGate();

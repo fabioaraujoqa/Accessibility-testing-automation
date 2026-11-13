@@ -9,7 +9,9 @@
     "a11y:kbd": "playwright test --project=a11y-kbd",
     "typecheck": "tsc --noEmit",
     "a11y:baseline": "tsx scripts/update-baseline.ts",
-    "a11y:report": "tsx scripts/report.ts && tsx scripts/wcag-docs.ts"
+    "a11y:report": "tsx scripts/report.ts && tsx scripts/wcag-docs.ts",
+    "a11y:selftest": "playwright test --project=selftest",
+    "check:versions": "node scripts/check-playwright-version.mjs"
   },
   "keywords": [],
   "author": "",

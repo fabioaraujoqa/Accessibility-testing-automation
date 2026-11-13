@@ -1,0 +1,116 @@
+# Gate de acessibilidade (WCAG 2.2 AA) — Playwright + axe-core.
+# Determinístico: nenhuma chamada a LLM/MCP roda aqui.
+#
+# Configuração (Settings → Secrets and variables → Actions):
+#   Variables: BASE_URL (URL do sistema; vazia = job "a11y" é pulado), A11Y_GATE_MODE (report|critical|serious)
+#   Secrets:   A11Y_USER, A11Y_PASSWORD (só se houver páginas com requiresAuth)
+name: Acessibilidade
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      gate_mode:
+        description: Modo do gate (sobrescreve a variable A11Y_GATE_MODE)
+        type: choice
+        options: [report, critical, serious]
+        default: report
+
+permissions:
+  contents: read
+
+concurrency:
+  group: a11y-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1) Autoteste: o gate e os detectores ainda funcionam? Roda contra demo/, sempre em modo serious.
+  selftest:
+    name: selftest (demo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      # Mesma versão do @playwright/test do package.json (verificado no primeiro passo).
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001
+    env:
+      BASE_URL: ''
+      A11Y_GATE_MODE: serious
+    steps:
+      - uses: actions/checkout@v7
+      - name: Versão da imagem = versão do @playwright/test
+        run: node scripts/check-playwright-version.mjs
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Testes contra o demo (selftest + suíte completa)
+        run: npx playwright test
+      - name: Relatório
+        if: ${{ !cancelled() }}
+        run: |
+          npm run a11y:report
+          cat reports/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: a11y-selftest
+          path: |
+            playwright-report/
+            reports/
+          retention-days: 14
+
+  # 2) Gate no sistema real. Só roda se a variable BASE_URL estiver configurada.
+  a11y:
+    name: a11y (${{ vars.BASE_URL }})
+    needs: selftest
+    if: ${{ vars.BASE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write # comentário com o resumo no PR
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
+      A11Y_GATE_MODE: ${{ inputs.gate_mode || vars.A11Y_GATE_MODE || 'report' }}
+      A11Y_USER: ${{ secrets.A11Y_USER }}
+      A11Y_PASSWORD: ${{ secrets.A11Y_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - name: Testes de acessibilidade (gate ${{ env.A11Y_GATE_MODE }})
+        run: npx playwright test
+      - name: Relatório
+        id: report
+        if: ${{ !cancelled() }}
+        run: |
+          npm run a11y:report
+          cat reports/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: a11y-report
+          path: |
+            playwright-report/
+            reports/
+          retention-days: 30
+      # Comentário no PR (atualiza o mesmo comentário a cada execução). PRs de fork não têm
+      # permissão de escrita: o passo é pulado, sem falhar o job.
+      - name: Comentar resumo no PR
+        if: ${{ !cancelled() && steps.report.outcome == 'success' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- a11y-report -->';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `${marker}\n${fs.readFileSync('reports/summary.md', 'utf8')}\n\n[Relatório completo e artefatos](${run})`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const previous = comments.find((c) => c.body?.includes(marker));
+            if (previous) await github.rest.issues.updateComment({ owner, repo, comment_id: previous.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });

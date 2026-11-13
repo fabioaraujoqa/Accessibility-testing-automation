@@ -17,7 +17,8 @@ npm run a11y                # todos os testes
 npm run a11y:pages          # só o scan de páginas (desktop + 320px)
 npm run a11y:journeys       # só as jornadas
 npm run a11y:kbd            # só os testes de teclado
-npm run a11y:report         # gera reports/summary.md + reports/metrics.json (após os testes)
+npm run a11y:selftest       # autotestes: o gate e os detectores continuam funcionando?
+npm run a11y:report         # gera reports/summary.md, metrics.json e REGRAS-WCAG.md (após os testes)
 npx playwright show-report  # relatório HTML (JSON do axe e ordem de foco anexados em cada teste)
 ```
 
@@ -66,6 +67,8 @@ O config recusa itens sem motivo.
 Jornadas cobrem **estados** que um scan de página não vê: menu aberto, modal, erro de validação, sucesso.
 Copie [tests/journeys/cadastro.a11y.spec.ts](tests/journeys/cadastro.a11y.spec.ts) (o modelo) e mantenha
 um `journey.scan('<estado>')` depois de cada interação relevante e um `await journey.expectGate()` no final.
+O estado inicial escaneia a página inteira. Os demais escaneiam só o trecho que mudou
+(`journey.scan('modal-aberto', { include: 'dialog[open]' })`), para a dívida da página não se repetir em cada estado.
 Use `toMatchAriaSnapshot` em componentes críticos para travar papel, nome e ordem
 (gere com `npx playwright test <arquivo> --update-snapshots` e revise o diff).
 
@@ -129,4 +132,50 @@ Rode-o quando: (a) for adotar o gate num sistema pela primeira vez, (b) corrigir
 | `moderate` | Causa incômodo ou confusão, mas há caminho (ex.: estrutura de landmarks incompleta). |
 | `minor` | Irritação leve; melhoria de qualidade. |
 
-<!-- Seções de CI (estratégia de ativação), MCP/agentes são completadas nas próximas fases. -->
+## Gate no CI (GitHub Actions)
+
+Workflow: [.github/workflows/a11y.yml](.github/workflows/a11y.yml). Roda em todo pull request, em push na `main`
+e manualmente (Actions → Acessibilidade → Run workflow, escolhendo o modo do gate).
+
+| Job | O que faz | Quando |
+|---|---|---|
+| `selftest` | Suíte contra `demo/` em modo `serious` + autotestes do gate e do detector de teclado. Se falhar, o próprio gate está quebrado (ex.: upgrade do axe). | Sempre |
+| `a11y` | Suíte contra o seu sistema (`BASE_URL`), com o modo do gate configurado. | Só se a variable `BASE_URL` existir; depois do `selftest` |
+
+Em cada job, mesmo quando os testes falham:
+- o `summary.md` aparece no **resumo da execução** (aba Summary do run);
+- os artefatos `playwright-report/` e `reports/` (summary, metrics, junit, REGRAS-WCAG) ficam disponíveis
+  para download (14 dias no selftest, 30 no a11y);
+- falhas aparecem como anotações no código (reporter `github`);
+- em PRs, o job `a11y` comenta o resumo no PR (atualizando o mesmo comentário). Usa o `GITHUB_TOKEN`
+  automático; em PRs de fork, sem permissão de escrita, o passo é pulado sem falhar.
+
+A imagem Docker (`mcr.microsoft.com/playwright:vX.Y.Z-noble`) precisa ter a mesma versão do `@playwright/test`.
+O primeiro passo do CI (`npm run check:versions`) reprova se divergirem: ao atualizar o Playwright,
+atualize os dois juntos.
+
+### Configurar (Settings → Secrets and variables → Actions)
+
+| Nome | Tipo | Valor |
+|---|---|---|
+| `BASE_URL` | Variable | URL do sistema (ex.: homologação). Sem ela, só o `selftest` roda. |
+| `A11Y_GATE_MODE` | Variable | `report`, `critical` ou `serious` (padrão: `report`). |
+| `A11Y_USER` | **Secret** | Usuário de teste (só se houver páginas com `requiresAuth`). |
+| `A11Y_PASSWORD` | **Secret** | Senha do usuário de teste. |
+
+Credenciais sempre como **Secret** (o GitHub as mascara nos logs), nunca como Variable.
+Para restringir os secrets à `main`, use um *Environment* com regra de proteção.
+
+### Estratégia de ativação
+
+1. **Semanas 1 e 2: `report`.** Nada reprova. Gere o baseline (`npm run a11y:baseline`), revise no code
+   review e acompanhe o `summary.md` para o time se acostumar com os achados.
+2. **Depois: `critical`.** Reprova só violações novas que bloqueiam o acesso.
+3. **Depois: `serious`.** Reprova também as que dificultam muito.
+4. **Reduzir o baseline aos poucos**, com meta por trimestre (ex.: −25% de `critical` + `serious`).
+   Cada correção sai do baseline com `npm run a11y:baseline`; acompanhe a evolução pelo `metrics.json`.
+
+> O plano original previa GitLab CI; este repositório usa GitHub Actions com as mesmas garantias
+> (imagem fixa, artefatos sempre publicados, resultado no PR, credenciais protegidas).
+
+<!-- Seção de MCP/agentes é completada na Fase 5. -->

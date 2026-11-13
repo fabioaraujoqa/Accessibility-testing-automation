@@ -69,7 +69,7 @@ export function readRun(file = RESULTS_FILE): RunData {
 }
 
 export function currentCommit(): string | null {
-  if (process.env.CI_COMMIT_SHORT_SHA) return process.env.CI_COMMIT_SHORT_SHA;
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
   try {
     return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
   } catch {

@@ -5,8 +5,11 @@ import { a11yConfig, type Exclusion } from '../a11y.config';
 export interface MakeAxeOptions {
   /** Exclusões adicionais (ex.: as da página), somadas às globais. */
   exclude?: Exclusion[];
-  /** Limita o scan a um trecho da página (ex.: um modal aberto). */
-  include?: string;
+  /**
+   * Limita o scan a um ou mais trechos da página (ex.: o modal aberto).
+   * Nas jornadas, use nos estados depois do inicial para não repetir a dívida da página inteira.
+   */
+  include?: string | string[];
 }
 
 export type MakeAxe = (options?: MakeAxeOptions) => AxeBuilder;
@@ -24,7 +27,7 @@ export const test = base.extend<A11yFixtures>({
       for (const { selector } of [...a11yConfig.globalExclude, ...(options.exclude ?? [])]) {
         builder = builder.exclude(selector);
       }
-      if (options.include) builder = builder.include(options.include);
+      for (const selector of [options.include ?? []].flat()) builder = builder.include(selector);
 
       const disabled = a11yConfig.disabledRules.map((r) => r.id);
       if (disabled.length) builder = builder.disableRules(disabled);

@@ -9,7 +9,7 @@ import { formatWalk, keyboardViolations, walkKeyboard } from '../../lib/keyboard
 test.describe('detector de teclado (demo-quebrada)', () => {
   test.skip(!IS_DEMO_TARGET, 'Autoteste do demo.');
 
-  test('detecta armadilha de foco, CTA inalcançável e foco invisível', { tag: ['@kbd', '@selftest'] }, async ({ page }, testInfo) => {
+  test('detecta armadilha de foco, CTA inalcançável e foco invisível', { tag: ['@selftest'] }, async ({ page }, testInfo) => {
     await page.goto('/quebrada.html');
 
     const forward = await walkKeyboard(page, { key: 'Tab', ctaSelector: '#cta-continuar' });

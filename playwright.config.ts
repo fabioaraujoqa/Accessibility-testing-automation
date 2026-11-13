@@ -11,7 +11,8 @@ export default defineConfig({
   outputDir: 'test-results',
 
   reporter: [
-    ['list'],
+    // No GitHub Actions, o reporter `github` anota as falhas direto no código do PR.
+    process.env.GITHUB_ACTIONS ? ['github'] : ['list'],
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['json', { outputFile: 'reports/results.json' }],
     // junit: alimenta o widget de testes do Merge Request no GitLab (artifacts:reports:junit).
@@ -25,6 +26,12 @@ export default defineConfig({
   },
 
   projects: [
+    {
+      // Autotestes: garantem que o gate e os detectores continuam funcionando (contra demo/).
+      name: 'selftest',
+      testMatch: /selftest\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
     {
       // Login → storageState. Só faz algo quando alguma página tem requiresAuth.
       name: 'setup',
