@@ -63,8 +63,11 @@ Use o agente playwright-test-planner para planejar a jornada "<JORNADA>" a parti
 <URL_OU_CAMINHO>, partindo do seed tests/seed.spec.ts. Liste os estados relevantes
 (inicial, menu expandido, modal aberto, erro de validação, sucesso...) e salve o plano em specs/.
 
-Depois use o agente playwright-test-generator para gerar tests/journeys/<arquivo>.a11y.spec.ts
-seguindo EXATAMENTE o padrão de tests/journeys/cadastro.a11y.spec.ts:
+Depois use o agente playwright-test-generator para gravar o cenário (navegação e verificações)
+em tests/journeys/<arquivo>.a11y.spec.ts.
+
+Por fim, adapte o arquivo gravado ao padrão de tests/journeys/cadastro.a11y.spec.ts
+(o generator só grava as interações que executou; ele não adiciona os scans):
 - importar test/expect de '../../fixtures/a11y' e createJourney de '../../lib/journey';
 - `const journey = createJourney({ page, testInfo, makeAxe, name: '<jornada>' })`;
 - `await journey.scan('inicial')` (página inteira) e, depois de cada interação relevante,
@@ -75,8 +78,14 @@ seguindo EXATAMENTE o padrão de tests/journeys/cadastro.a11y.spec.ts:
 - terminar com `await journey.expectGate()`;
 - nenhuma credencial no código (login vem do projeto setup / storageState).
 
+- caminhos relativos ao baseURL (page.goto('/caminho')), nunca a URL absoluta usada na exploração;
+- no topo, um comentário dizendo que o teste foi gerado com apoio dos agentes e o que foi ajustado na revisão.
+
 Rode o teste gerado e mostre o resultado. Não altere a11y.config.ts, baseline/ nem lib/.
 ```
+
+Exemplo real deste fluxo: [tests/journeys/login-area-logada.a11y.spec.ts](../tests/journeys/login-area-logada.a11y.spec.ts)
+(plano em [specs/login-area-logada.md](../specs/login-area-logada.md)).
 
 ## 3. Triagem de violações para o dev
 

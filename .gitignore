@@ -13,3 +13,6 @@ reports/
 blob-report/
 
 .DS_Store
+
+# Snapshots e logs do Playwright MCP (exploração local)
+.playwright-mcp/
